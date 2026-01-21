@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Smart Science App</title>
+<meta name="description" content="Advanced web platform: unit conversion, scientific calculator, graph plotting, interactive animations.">
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- Styles -->
+<style>
+:root {
+  --primary: #00bcd4;
+  --bg: #f0f8ff;
+  --card-bg: #fff;
+  --text: #000;
+}
+[data-theme="dark"] {
+  --primary: #00acc1;
+  --bg: #1c1c1c;
+  --card-bg: #121212;
+  --text: #fff;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  transition: all 0.5s ease;
+}
+header {
+  background-color: var(--primary);
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+header h1 { margin: 0; }
+#settings {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+}
+#languageSelector, #themeSelector { padding:6px; border-radius:5px; border:none; margin-left:5px; }
+
+.tabs { display:flex; justify-content:center; flex-wrap:wrap; margin:20px; gap:10px; }
+.tab { padding:10px 20px; background-color: var(--primary); color:white; border-radius:10px; cursor:pointer; transition: transform 0.2s ease; }
+.tab:hover { transform: scale(1.05); }
+.tab.active { box-shadow:0 4px 15px rgba(0,0,0,0.2); font-weight:bold; }
+
+.container { display:flex; justify-content:center; flex-wrap:wrap; gap:20px; padding:20px; }
+
+.card {
+  background-color: var(--card-bg);
+  padding:20px;
+  border-radius:15px;
+  width:320px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+  text-align:center;
+  transition: transform 0.3s ease, background-color 0.5s ease;
+}
+.card:hover { transform: translateY(-5px); }
+.card h3 { margin-top:0; color: var(--primary); display:flex; align-items:center; justify-content:center; gap:10px; }
+
+input, select, button { width:100%; padding:8px; margin:5px 0; border-radius:5px; border:1px solid #ccc; font-size:16px; }
+button { background-color: var(--primary); color:white; font-weight:bold; cursor:pointer; transition: background-color 0.3s ease; }
+button:hover { background-color:#007c91; }
+
+#result { font-weight:bold; color: var(--primary); margin-top:10px; opacity:0; transition: opacity 0.6s ease; }
+
+canvas { background-color:#fff; border-radius:10px; margin-top:10px; transition: all 0.5s ease; }
+
+@media(max-width:700px){.card{width:90%;}}
+</style>
+</head>
+<body data-theme="light">
+
+<header>
+<h1 id="title">Ultimate Smart Science App</h1>
+<div id="settings">
+  <select id="languageSelector" onchange="changeLanguage()">
+    <option value="en">English</option>
+    <option value="fr">Français</option>
+    <option value="ar">العربية</option>
+    <option value="es">Español</option>
+  </select>
+  <select id="themeSelector" onchange="changeTheme()">
+    <option value="light">Light</option>
+    <option value="dark">Dark</option>
+  </select>
+</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="converter" onclick="showTab('converter')">Unit Converter</div>
+  <div class="tab" data-tab="calculator" onclick="showTab('calculator')">Scientific Calculator</div>
+  <div class="tab" data-tab="graphs" onclick="showTab('graphs')">Graph Plotter</div>
+</div>
+
+<div class="container" id="appContainer">
+  <!-- Content generated dynamically -->
+</div>
+
+<script>
+/* =========================
+  Languages
+========================= */
+const texts={
+  en:{title:"Ultimate Smart Science App", placeholder:"Enter value", button:"Convert", calc:"Calculate", plot:"Plot Function"},
+  fr:{title:"Application Scientifique Intelligente", placeholder:"Entrez la valeur", button:"Convertir", calc:"Calculer", plot:"Tracer Fonction"},
+  ar:{title:"تطبيق العلوم الذكي", placeholder:"أدخل الرقم", button:"تحويل", calc:"احسب", plot:"ارسم الدالة"},
+  es:{title:"Aplicación Científica Inteligente", placeholder:"Ingrese el valor", button:"Convertir", calc:"Calcular", plot:"Graficar Función"}
+};
+
+/* =========================
+  Theme
+========================= */
+function changeTheme(){
+  const t=document.getElementById("themeSelector").value;
+  document.body.setAttribute("data-theme",t);
+}
+
+/* =========================
+  Tabs
+========================= */
+function showTab(tab){
+  const tabs=document.querySelectorAll(".tab");
+  tabs.forEach(t=>t.classList.remove("active"));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add("active");
+  generateContent(tab);
+}
+
+/* =========================
+  Dynamic Content
+========================= */
+function generateContent(tab){
+  const container=document.getElementById("appContainer");
+  container.innerHTML="";
+  const lang=document.getElementById("languageSelector").value;
+
+  if(tab==="converter"){
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`
+      <h3>Unit Converter</h3>
+      <input type="number" id="valueInput" placeholder="${texts[lang].placeholder}">
+      <select id="fromUnit">
+        <option value="m">Meter</option><option value="cm">Centimeter</option><option value="km">Kilometer</option>
+      </select>
+      <select id="toUnit">
+        <option value="m">Meter</option><option value="cm">Centimeter</option><option value="km">Kilometer</option>
+      </select>
+      <button onclick="convertUnit()">Convert</button>
+      <div id="result"></div>
+    `;
+    container.appendChild(card);
+  }
+
+  if(tab==="calculator"){
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`
+      <h3>Scientific Calculator</h3>
+      <input type="text" id="calcInput" placeholder="e.g. sin(45)+log(10)">
+      <button onclick="calculate()">Calculate</button>
+      <div id="calcResult"></div>
+    `;
+    container.appendChild(card);
+  }
+
+  if(tab==="graphs"){
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`
+      <h3>Graph Plotter</h3>
+      <input type="text" id="graphFunc" placeholder="e.g. x*x+2*x+1">
+      <button onclick="plotFunction()">Plot Function</button>
+      <canvas id="graphCanvas" width="300" height="300"></canvas>
+    `;
+    container.appendChild(card);
+  }
+}
+
+/* =========================
+  Language Change
+========================= */
+function changeLanguage(){
+  const lang=document.getElementById("languageSelector").value;
+  document.getElementById("title").innerText=texts[lang].title;
+  generateContent(document.querySelector(".tab.active").dataset.tab);
+}
+
+/* =========================
+  Unit Converter Logic
+========================= */
+function convertUnit(){
+  const val=parseFloat(document.getElementById("valueInput").value);
+  const from=document.getElementById("fromUnit").value;
+  const to=document.getElementById("toUnit").value;
+  const result=document.getElementById("result");
+  if(isNaN(val)){result.style.opacity=0; return;}
+  const conv={m:1, cm:0.01, km:1000};
+  const res=val*conv[from]/conv[to];
+  result.innerText=res.toFixed(4);
+  result.style.opacity=1;
+}
+
+/* =========================
+  Scientific Calculator
+========================= */
+function calculate(){
+  const input=document.getElementById("calcInput").value;
+  const result=document.getElementById("calcResult");
+  try{result.innerText=eval(input); result.style.opacity=1;}
+  catch{result.innerText="Error"; result.style.opacity=1;}
+}
+
+/* =========================
+  Graph Plotter
+========================= */
+function plotFunction(){
+  const input=document.getElementById("graphFunc").value;
+  const canvas=document.getElementById("graphCanvas");
+  const ctx=canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.beginPath();
+  ctx.strokeStyle="blue";
+  ctx.lineWidth=2;
+
+  for(let i=0;i<canvas.width;i++){
+    const x=i/10-15;
+    let y;
+    try{y=eval(input);} catch{y=0;}
+    const canvasY=canvas.height/2 - y*20;
+    if(i===0) ctx.moveTo(i,canvasY); else ctx.lineTo(i,canvasY);
+  }
+  ctx.stroke();<!-- ضع هذا الجزء أعلى body مباشرة -->
+<div id="natureScene">
+  <canvas id="natureCanvas"></canvas>
+</div>
+
+<style>
+#natureScene {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  z-index:-1; /* خلف التطبيق */
+}
+canvas { width:100%; height:100%; display:block; }
+</style>
+
+<script>
+// Canvas setup
+const canvas = document.getElementById("natureCanvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Draw lake
+function drawLake() {
+  const grad = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height);
+  grad.addColorStop(0, "#87CEFA"); // sky reflection
+  grad.addColorStop(1, "#4682B4"); // deep water
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, canvas.height/2, canvas.width, canvas.height/2);
+}
+
+// Draw static mountains
+function drawMountains() {
+  ctx.fillStyle="#2E8B57";
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height/2);
+  ctx.lineTo(canvas.width*0.2, canvas.height/3);
+  ctx.lineTo(canvas.width*0.4, canvas.height/2);
+  ctx.lineTo(canvas.width*0.6, canvas.height/3.5);
+  ctx.lineTo(canvas.width*0.8, canvas.height/2);
+  ctx.lineTo(canvas.width, canvas.height/3.2);
+  ctx.lineTo(canvas.width, canvas.height/2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// Trees
+class Tree {
+  constructor(x, y, height) {
+    this.x = x;
+    this.y = y;
+    this.height = height;
+    this.sway = Math.random()*0.02;
+    this.angle = 0;
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(Math.sin(this.angle)*this.sway);
+    ctx.fillStyle="#8B4513"; // trunk
+    ctx.fillRect(-5, 0, 10, -this.height);
+    ctx.beginPath();
+    ctx.moveTo(0, -this.height);
+    ctx.fillStyle="#228B22"; // leaves
+    ctx.arc(0, -this.height-10, 20, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+    this.angle += 0.02;
+  }
+}
+
+// Create multiple trees
+const trees=[];
+for(let i=0;i<15;i++){
+  trees.push(new Tree(Math.random()*canvas.width, canvas.height/2 + Math.random()*50, 50+Math.random()*50));
+}
+
+// Animate scene
+function animateScene(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawLake();
+  drawMountains();
+  trees.forEach(t=>t.draw());
+  requestAnimationFrame(animateScene);
+}
+
+animateScene();
+
+// Handle resize
+window.addEventListener('resize',()=>{
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+});
+</script>}
+window.onload=function(){generateContent("converter");}
+</script>
+</body>
+</html>
